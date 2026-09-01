@@ -1,4 +1,4 @@
-.PHONY: install edit run test check docker-run
+.PHONY: install edit run test check evidencia docker-run
 
 install:
 	uv sync
@@ -18,3 +18,7 @@ check:
 
 docker-run:
 	docker compose up --build notebook
+
+evidencia:
+	uv run python ejecutar.py > evidencia/salida-pipeline.txt
+	uv run pytest -v > evidencia/pytest.txt
