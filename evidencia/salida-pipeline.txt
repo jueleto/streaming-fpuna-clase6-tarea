@@ -1,0 +1,66 @@
+
+Entrada
+=======
+9 eventos en data/payments.jsonl
+
+Auditoría evento por evento
+===========================
+event_id  comercio   atraso   dup  tarde   rev  acepta  motivo
+p-001     m-azul         1s False  False False    True  accepted
+p-002     m-verde        2s False  False False    True  accepted
+p-003     m-azul         2s False  False False   False  status
+p-004     m-azul        53s False  False  True    True  accepted
+p-002     m-verde       83s  True  False False   False  duplicate
+p-005     m-verde        2s False  False False    True  accepted
+p-006     m-azul         1s False  False False    True  accepted
+p-007     m-verde      169s False   True False   False  too_late
+p-008     m-azul         3s False  False False   False  status
+
+5 aceptados de 9; 4 totales producidos
+
+Totales por comercio y ventana (oráculo determinista)
+=====================================================
+m-azul    2026-07-24T13:00:00+00:00 → 2026-07-24T13:01:00+00:00    170.000
+m-azul    2026-07-24T13:02:00+00:00 → 2026-07-24T13:03:00+00:00    200.000
+m-verde   2026-07-24T13:00:00+00:00 → 2026-07-24T13:01:00+00:00     80.000
+m-verde   2026-07-24T13:01:00+00:00 → 2026-07-24T13:02:00+00:00     90.000
+
+Los mismos totales calculados por el pipeline Beam
+==================================================
+m-azul    2026-07-24T13:00:00+00:00 → 2026-07-24T13:01:00+00:00    170.000
+m-verde   2026-07-24T13:01:00+00:00 → 2026-07-24T13:02:00+00:00     90.000
+m-verde   2026-07-24T13:00:00+00:00 → 2026-07-24T13:01:00+00:00    190.000
+m-azul    2026-07-24T13:02:00+00:00 → 2026-07-24T13:03:00+00:00    200.000
+
+Pipeline compuesto: ventana + horizonte + estado
+================================================
+build_windowed_totals_pipeline no deduplica ni descarta tardíos: ése
+es su contrato. Componiéndolo con el filtro de horizonte y con
+DeduplicatePayments, el pipeline converge a los totales del oráculo.
+
+m-azul    2026-07-24T13:00:00+00:00 → 2026-07-24T13:01:00+00:00    170.000  pane #0 parcial
+m-azul    2026-07-24T13:00:00+00:00 → 2026-07-24T13:01:00+00:00    170.000  pane #1 FINAL
+m-verde   2026-07-24T13:00:00+00:00 → 2026-07-24T13:01:00+00:00     80.000  pane #1 FINAL
+m-azul    2026-07-24T13:02:00+00:00 → 2026-07-24T13:03:00+00:00    200.000  pane #0 parcial
+m-verde   2026-07-24T13:01:00+00:00 → 2026-07-24T13:02:00+00:00     90.000  pane #0 parcial
+m-verde   2026-07-24T13:00:00+00:00 → 2026-07-24T13:01:00+00:00     80.000  pane #0 parcial
+m-verde   2026-07-24T13:01:00+00:00 → 2026-07-24T13:02:00+00:00     90.000  pane #1 FINAL
+m-azul    2026-07-24T13:02:00+00:00 → 2026-07-24T13:03:00+00:00    200.000  pane #1 FINAL
+
+Política de ventana y triggers
+==============================
+ventana fija            : 60 s
+lateness permitida      : 120 s
+trigger                 : AfterWatermark(early=AfterProcessingTime(delay=30), late=AfterCount(1))
+modo de acumulación     : 2 (2 = ACCUMULATING)
+
+Sink: mismos resultados, dos contratos de escritura
+===================================================
+UPSERT idempotente  : 8 intentos → 4 filas materializadas
+POST append-only    : 8 intentos → 8 filas materializadas
+
+claves idempotentes:
+  m-azul|2026-07-24T13:00:00+00:00
+  m-azul|2026-07-24T13:02:00+00:00
+  m-verde|2026-07-24T13:00:00+00:00
+  m-verde|2026-07-24T13:01:00+00:00

@@ -1,0 +1,28 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.13, pytest-8.4.2, pluggy-1.6.0 -- /Users/emilio/repok/master-iaad/m14-tarea-03/streaming-fpuna-clase6-tarea/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/emilio/repok/master-iaad/m14-tarea-03/streaming-fpuna-clase6-tarea
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collecting ... collected 18 items
+
+tests/test_assignment.py::test_parse_utc_returns_timezone_aware_datetime PASSED [  5%]
+tests/test_assignment.py::test_assign_fixed_window_uses_event_time PASSED [ 11%]
+tests/test_assignment.py::test_duplicate_does_not_change_total PASSED    [ 16%]
+tests/test_assignment.py::test_deduplication_is_isolated_by_merchant PASSED [ 22%]
+tests/test_assignment.py::test_stateful_dofn_keeps_keys_isolated PASSED  [ 27%]
+tests/test_assignment.py::test_out_of_order_event_uses_its_event_time_window PASSED [ 33%]
+tests/test_assignment.py::test_late_event_within_tolerance_is_a_revision PASSED [ 38%]
+tests/test_assignment.py::test_event_beyond_lateness_is_audited PASSED   [ 44%]
+tests/test_assignment.py::test_windowed_pipeline_produces_totals PASSED  [ 50%]
+tests/test_assignment.py::test_trigger_policy_has_lateness_and_accumulating_panes PASSED [ 55%]
+tests/test_assignment.py::test_retries_converge_to_one_materialized_entity PASSED [ 61%]
+tests/test_assignment.py::test_append_only_sink_materializes_every_attempt PASSED [ 66%]
+tests/test_assignment.py::test_timer_handler_clears_state PASSED         [ 72%]
+tests/test_politica_temporal.py::test_pane_late_dentro_de_la_tolerancia_corrige_el_total PASSED [ 77%]
+tests/test_politica_temporal.py::test_evento_fuera_del_horizonte_no_corrige_el_total PASSED [ 83%]
+tests/test_politica_temporal.py::test_duplicado_se_emite_una_sola_vez_dentro_de_la_clave PASSED [ 88%]
+tests/test_politica_temporal.py::test_process_programa_el_timer_al_final_de_la_ventana_mas_lateness PASSED [ 94%]
+tests/test_politica_temporal.py::test_la_politica_asigna_las_mismas_ventanas_que_fixed_windows PASSED [100%]
+
+============================== 18 passed in 1.89s ==============================
